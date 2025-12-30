@@ -12,6 +12,7 @@ import { Users, RefreshCw, Receipt, Printer, Plus, ChefHat, Clock, CheckCircle }
 import BillDisplay from "./BillDisplay";
 import KOTReceipt from "./KOTReceipt";
 import OrderEntry from "./OrderEntry";
+import FinalBillDialog from "./FinalBillDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,9 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
   const [generatingKOT, setGeneratingKOT] = useState<string | null>(null);
   const [showBill, setShowBill] = useState(false);
   const [billData, setBillData] = useState<any>(null);
+  const [showFinalBillDialog, setShowFinalBillDialog] = useState(false);
+  const [finalBillTableId, setFinalBillTableId] = useState<string | null>(null);
+  const [finalBillTableNumber, setFinalBillTableNumber] = useState<number>(0);
   const [showKOT, setShowKOT] = useState(false);
   const [kotData, setKotData] = useState<any>(null);
   const [selectedOrderForFood, setSelectedOrderForFood] = useState<any>(null);
@@ -110,19 +114,9 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
 
   const handleGenerateFinalBill = async (table: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    setGeneratingBill(table._id || table.id);
-
-    try {
-      const bill = await billsAPI.createFinal(table._id || table.id);
-      setBillData({ ...bill, table });
-      setShowBill(true);
-      toast.success(`Final bill generated for Table ${table.table_number}`);
-    } catch (error: any) {
-      console.error("Failed to generate final bill:", error);
-      toast.error("Failed to generate final bill: " + (error.response?.data?.message || error.message || "Unknown error"));
-    } finally {
-      setGeneratingBill(null);
-    }
+    setFinalBillTableId(table._id || table.id);
+    setFinalBillTableNumber(table.table_number);
+    setShowFinalBillDialog(true);
   };
 
   const handleGenerateKOT = async (table: any, e: React.MouseEvent) => {
@@ -130,7 +124,7 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
     setGeneratingKOT(table._id || table.id);
 
     try {
-      // Get ALL orders for this table
+      // Get only the LATEST order for this table (most recent items added)
       const tableOrders = orders.filter(o => (o.table_id || o.table?._id) === (table._id || table.id));
       if (tableOrders.length === 0) {
         toast.error("No orders found for this table");
@@ -138,42 +132,23 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
         return;
       }
 
-      // Aggregate ALL items from ALL orders for this table
-      const allItems: any[] = [];
-      tableOrders.forEach(order => {
-        if (order.items && order.items.length > 0) {
-          order.items.forEach((item: any) => {
-            // Check if item already exists in allItems
-            const existingItem = allItems.find(i =>
-              (i.item_name || i.name) === (item.item_name || item.name)
-            );
+      // Sort by creation date and get the most recent order
+      const latestOrder = tableOrders.sort((a, b) => {
+        const dateA = new Date(a.created_at || a.createdAt).getTime();
+        const dateB = new Date(b.created_at || b.createdAt).getTime();
+        return dateB - dateA;
+      })[0];
 
-            if (existingItem) {
-              // If item exists, add to quantity
-              existingItem.quantity += item.quantity;
-            } else {
-              // If new item, add to array
-              allItems.push({
-                item_name: item.item_name || item.name,
-                name: item.item_name || item.name,
-                quantity: item.quantity,
-                price: item.price,
-              });
-            }
-          });
-        }
-      });
-
-      if (allItems.length === 0) {
-        toast.error("No items in orders");
+      if (!latestOrder.items || latestOrder.items.length === 0) {
+        toast.error("No items in the latest order");
         setGeneratingKOT(null);
         return;
       }
 
-      // Generate KOT with all aggregated items
+      // Generate KOT with only the latest order items
       setKotData({
         table,
-        items: allItems.map((item: any) => ({
+        items: latestOrder.items.map((item: any) => ({
           name: item.item_name || item.name,
           quantity: item.quantity,
           price: item.price,
@@ -181,7 +156,7 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
         kotNumber: `KOT-${table.table_number}-${Date.now()}`,
       });
       setShowKOT(true);
-      toast.success("KOT generated successfully");
+      toast.success("KOT generated for latest items");
     } catch (error: any) {
       console.error("Failed to generate KOT:", error);
       toast.error("Failed to generate KOT");
@@ -214,7 +189,12 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
   };
 
   // Filter orders by status
-  const readyOrders = orders.filter(o => o.status === "ready");
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
+  const servedOrders = orders.filter(o => {
+    if (o.status !== "served") return false;
+    const orderDate = new Date(o.updated_at || o.updatedAt || o.created_at || o.createdAt);
+    return orderDate >= oneHourAgo; // Only show served orders from last 1 hour
+  });
   const activeOrders = orders.filter(o => ["sent_to_kitchen", "preparing"].includes(o.status));
   const runningOrders = orders.filter(o => o.status === "pending");
 
@@ -243,7 +223,6 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
             fetchTables();
             fetchOrders();
           }}
-          onGenerateKOT={onGenerateKOT}
         />
       </div>
     );
@@ -254,11 +233,11 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 sm:mb-6">
           <TabsTrigger value="tables" className="text-xs sm:text-sm">Tables</TabsTrigger>
-          <TabsTrigger value="ready" className="text-xs sm:text-sm">
-            Ready
-            {readyOrders.length > 0 && (
+          <TabsTrigger value="served" className="text-xs sm:text-sm">
+            Served
+            {servedOrders.length > 0 && (
               <Badge variant="destructive" className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-xs">
-                {readyOrders.length}
+                {servedOrders.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -377,25 +356,28 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
           </motion.div>
         </TabsContent>
 
-        {/* Ready Orders Tab */}
-        <TabsContent value="ready">
+        {/* Served Orders Tab */}
+        <TabsContent value="served">
           <div className="space-y-3 sm:space-y-4">
-            {readyOrders.length === 0 ? (
+            <div className="text-sm text-muted-foreground text-center pb-2">
+              Showing served orders from the last 1 hour
+            </div>
+            {servedOrders.length === 0 ? (
               <Card>
                 <CardContent className="py-8 sm:py-12 text-center">
                   <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
-                  <p className="text-sm sm:text-base text-muted-foreground">No orders ready to serve</p>
+                  <p className="text-sm sm:text-base text-muted-foreground">No orders served in the last hour</p>
                 </CardContent>
               </Card>
             ) : (
-              readyOrders.map((order) => (
-                <Card key={order._id || order.id} className="border-2 border-primary">
+              servedOrders.map((order) => (
+                <Card key={order._id || order.id} className="border-2 border-green-500">
                   <CardHeader className="pb-3 sm:pb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                       <div>
                         <CardTitle className="text-base sm:text-lg">Table {order.table?.table_number || order.table?.tableNumber}</CardTitle>
                         <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                          {new Date(order.created_at || order.createdAt).toLocaleTimeString()}
+                          Served at: {new Date(order.updated_at || order.updatedAt || order.created_at || order.createdAt).toLocaleTimeString()}
                         </p>
                       </div>
                       {getOrderStatusBadge(order.status)}
@@ -527,6 +509,22 @@ const TableManagementEnhanced = ({ onTableSelect, onResetTable, onGenerateKOT }:
           onClose={() => {
             setShowKOT(false);
             setKotData(null);
+          }}
+        />
+      )}
+
+      {/* Final Bill Dialog */}
+      {showFinalBillDialog && finalBillTableId && (
+        <FinalBillDialog
+          tableId={finalBillTableId}
+          tableNumber={finalBillTableNumber}
+          open={showFinalBillDialog}
+          onClose={() => {
+            setShowFinalBillDialog(false);
+            setFinalBillTableId(null);
+            setFinalBillTableNumber(0);
+            fetchTables();
+            fetchOrders();
           }}
         />
       )}
