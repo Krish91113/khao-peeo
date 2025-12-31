@@ -1,6 +1,7 @@
 import { Table } from "../models/Table.model.js";
 import { Order } from "../models/Order.model.js";
 import { Bill } from "../models/Bill.model.js";
+import { ServedOrder } from "../models/ServedOrder.model.js";
 
 // @route   GET /api/tables/:id
 // @desc    Get single table by id
@@ -87,7 +88,7 @@ export const updateTableStatus = async (req, res) => {
 };
 
 // @route   PUT /api/tables/:id/reset
-// @desc    Reset table (mark as served, delete all orders and bills)
+// @desc    Reset table (mark as served, save history, delete all orders and bills)
 // @access  Protected (owner/admin)
 export const resetTable = async (req, res) => {
   try {
@@ -96,6 +97,54 @@ export const resetTable = async (req, res) => {
     const table = await Table.findById(id);
     if (!table) {
       return res.status(404).json({ message: "Table not found" });
+    }
+
+    // Fetch all orders for this table
+    const orders = await Order.find({ table: table._id }).lean();
+
+    // Fetch all bills for this table
+    const bills = await Bill.find({ table: table._id }).lean();
+
+    // Only create ServedOrder if there are orders
+    if (orders.length > 0) {
+      // Calculate total bill amount
+      const totalBillAmount = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+      // Get the most recent bill for bill details (if exists)
+      const latestBill = bills.length > 0
+        ? bills.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+        : null;
+
+      // Create served order history
+      const servedOrderData = {
+        tableNumber: table.tableNumber,
+        orders: orders.map(order => ({
+          orderId: order._id.toString(),
+          items: order.items.map(item => ({
+            item_name: item.item_name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          totalAmount: order.totalAmount,
+          status: order.status,
+          createdAt: order.createdAt,
+          updatedAt: order.updatedAt,
+        })),
+        totalBillAmount,
+        billDetails: latestBill ? {
+          billId: latestBill._id.toString(),
+          subtotal: latestBill.subtotal,
+          tax: latestBill.tax,
+          discount: latestBill.discount,
+          total: latestBill.total,
+          items: latestBill.items,
+          createdAt: latestBill.createdAt,
+        } : null,
+        servedBy: req.user._id,
+      };
+
+      await ServedOrder.create(servedOrderData);
+      console.log(`Created served order history for table ${table.tableNumber}`);
     }
 
     // Delete ALL orders associated with this table (not just current order)

@@ -7,6 +7,7 @@ import tableRoutes from "./routes/table.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import billRoutes from "./routes/bill.routes.js";
 import superadminRoutes from "./routes/superadmin.routes.js";
+import servedOrderRoutes from "./routes/servedOrder.routes.js";
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use("/api/tables", tableRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/superadmin", superadminRoutes);
+app.use("/api/served-orders", servedOrderRoutes);
 
 // Global error handler fallback
 app.use((err, req, res, next) => {
