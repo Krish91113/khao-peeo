@@ -12,8 +12,7 @@ const seedTables = async () => {
     // Check if tables already exist
     const existingTables = await Table.countDocuments();
     if (existingTables > 0) {
-      console.log(`⚠️  ${existingTables} tables already exist. Skipping seed.`);
-      console.log("   To recreate tables, delete them first or use: Table.deleteMany({})");
+      
       process.exit(0);
     }
 
@@ -33,12 +32,11 @@ const seedTables = async () => {
     ];
 
     const createdTables = await Table.insertMany(tablesData);
-    console.log(`\n✅ Created ${createdTables.length} tables successfully!`);
-    console.log("\n📋 Tables created:");
+    
     createdTables.forEach((table) => {
-      console.log(`   - Table ${table.tableNumber} (Capacity: ${table.capacity})`);
+      
     });
-    console.log("\n🎉 Database seeding complete! You can now use the application.");
+
 
     process.exit(0);
   } catch (error) {

@@ -9,7 +9,6 @@ const start = async () => {
   await connectDB();
 
   server.listen(ENV.PORT, () => {
-    console.log(`Server running in ${ENV.NODE_ENV} mode on port ${ENV.PORT}`);
   });
 };
 

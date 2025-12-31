@@ -6,13 +6,13 @@ import { ENV } from "../config/env.js";
 const seedSuperAdmin = async () => {
     try {
         await mongoose.connect(ENV.MONGO_URI);
-        console.log("Connected to MongoDB for seeding superadmin...");
+       
 
         // Check if superadmin already exists
         const existingSuperAdmin = await User.findOne({ role: "superadmin" });
 
         if (existingSuperAdmin) {
-            console.log("✅ Superadmin already exists:", existingSuperAdmin.email);
+    
             await mongoose.disconnect();
             return;
         }
@@ -26,11 +26,6 @@ const seedSuperAdmin = async () => {
             password: hashedPassword,
             role: "superadmin",
         });
-
-        console.log("✅ Superadmin created successfully!");
-        console.log("📧 Email:", superAdmin.email);
-        console.log("🔑 Password: SuperAdmin@123");
-        console.log("⚠️  Please change the password after first login!");
 
     } catch (error) {
         console.error("❌ Error seeding superadmin:", error.message);

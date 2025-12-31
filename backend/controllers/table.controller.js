@@ -144,17 +144,17 @@ export const resetTable = async (req, res) => {
       };
 
       await ServedOrder.create(servedOrderData);
-      console.log(`Created served order history for table ${table.tableNumber}`);
+      
     }
 
     // Delete ALL orders associated with this table (not just current order)
     // This ensures a fresh start for the next customer
     const deleteOrdersResult = await Order.deleteMany({ table: table._id });
-    console.log(`Deleted ${deleteOrdersResult.deletedCount} orders for table ${table.tableNumber}`);
+  
 
     // Delete ALL bills associated with this table
     const deleteBillsResult = await Bill.deleteMany({ table: table._id });
-    console.log(`Deleted ${deleteBillsResult.deletedCount} bills for table ${table.tableNumber}`);
+    
 
     // Reset table status
     table.isBooked = false;
