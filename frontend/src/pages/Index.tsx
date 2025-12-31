@@ -26,7 +26,8 @@ import {
   Printer,
   ChefHat,
   QrCode,
-  Plus
+  Plus,
+  ChevronRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
@@ -434,7 +435,7 @@ const Index = () => {
                   <Button variant="ghost" className="w-full">Sign In</Button>
                 </Link>
                 <Link to="/auth">
-                  <Button className="w-full bg-orange-600 hover:bg-orange-700">Start Free Trial</Button>
+                  <Button className="w-full px-8 bg-orange-600 hover:bg-orange-700">Start Free Trial</Button>
                 </Link>
               </div>
             </motion.div>
@@ -713,14 +714,52 @@ const Index = () => {
           ].map((feature, index) => (
             <motion.div
               key={index}
-              className="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100"
+              className="group relative bg-white p-8 rounded-xl shadow-md hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden"
               variants={itemVariants}
+              whileHover={{ y: -8 }}
             >
-              <div className={`h-14 w-14 ${feature.color} rounded-xl flex items-center justify-center mb-6`}>
-                <feature.icon className={`h-7 w-7 ${feature.iconColor}`} />
+              {/* Animated gradient overlay - appears on hover */}
+              <div
+                className="absolute top-0 left-0 w-full h-full opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(249, 115, 22, 0.08) 40%, rgba(0, 0, 0, 0) 70%)',
+                }}
+              />
+
+              {/* Icon container with enhanced animation */}
+              <div className="relative mb-6 group-hover:mb-4 transition-all duration-500">
+                <div className={`h-14 w-14 ${feature.color} rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative overflow-hidden`}>
+                  {/* Icon glow effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
+                  <feature.icon className={`h-7 w-7 ${feature.iconColor} relative z-10 group-hover:scale-110 transition-transform duration-500`} />
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+
+              {/* Content */}
+              <h3 className="relative text-xl font-bold mb-3 text-gray-900 group-hover:text-orange-700 transition-colors duration-300">
+                {feature.title}
+              </h3>
+              <p className="relative text-gray-600 leading-relaxed mb-4 group-hover:text-gray-700 transition-colors duration-300">
+                {feature.description}
+              </p>
+
+              {/* Learn more link - fades in on hover */}
+              <a
+                href="#"
+                className="relative text-base text-orange-600 font-semibold opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 flex items-center gap-1 transition-all duration-500"
+              >
+                Learn more
+                <motion.span
+                  className="inline-block"
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </motion.span>
+              </a>
+
+              {/* Bottom accent line */}
+              <div className="absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r from-orange-500 to-red-500 group-hover:w-full transition-all duration-500" />
             </motion.div>
           ))}
         </motion.div>
@@ -950,7 +989,7 @@ const Index = () => {
             </Link>
             <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white/10 text-lg px-8 transition-all duration-300 hover:scale-105">
               <Phone className="h-5 w-5 mr-2" />
-              Call: +91 98765 43210
+              Call: +91 91525 15229
             </Button>
           </motion.div>
           <motion.p
@@ -989,7 +1028,7 @@ const Index = () => {
                 {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
                   <a
                     key={index}
-                    href="#"
+                    href="https://www.linkedin.com/in/krish9113/"
                     className="h-10 w-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors duration-300"
                   >
                     <Icon className="h-5 w-5" />
@@ -1024,7 +1063,7 @@ const Index = () => {
             >
               <h3 className="text-white font-bold text-lg mb-4">Company</h3>
               <ul className="space-y-3">
-                {["About Us", "Careers", "Blog", "Press Kit", "Partners", "Refer & Earn"].map((item, i) => (
+                {["About Us", "Careers", "Blog", "Press Kit", "Partners"].map((item, i) => (
                   <li key={i}>
                     <a href="#" className="hover:text-orange-500 transition-colors">{item}</a>
                   </li>
@@ -1047,7 +1086,7 @@ const Index = () => {
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className="h-5 w-5 text-orange-500 flex-shrink-0" />
-                  <a href="tel:+919876543210" className="text-sm hover:text-orange-500">+91 98765 43210</a>
+                  <a href="tel:+9191525 15229" className="text-sm hover:text-orange-500">+91 91525 15229</a>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="h-5 w-5 text-orange-500 flex-shrink-0" />
@@ -1060,7 +1099,9 @@ const Index = () => {
           <div className="border-t border-gray-800 mt-12 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-400 text-sm">
-                © 2025 KHAO PEEO. All rights reserved. Made with ❤️ in India
+                © 2025 KHAO PEEO. All rights reserved. 
+                <br />
+                 <a className="" href="https://netbro.in/">Netbro</a>
               </p>
               <div className="flex gap-6 text-sm">
                 {["Privacy Policy", "Terms of Service", "Refund Policy"].map((item, i) => (

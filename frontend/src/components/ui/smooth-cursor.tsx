@@ -42,66 +42,217 @@ export interface SmoothCursorProps {
 
 const DefaultCursorSVG: FC<{ size?: number; color?: string; className?: string }> = ({
     size = 25,
-    color = "black",
+    color = "#ea580c",
     className
 }) => {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            width={size * 2}
-            height={size * 2.16}
-            viewBox="0 0 50 54"
+            width={size * 2.4}
+            height={size * 2.6}
+            viewBox="0 0 60 65"
             fill="none"
             className={cn("pointer-events-none", className)}
         >
-            <g filter="url(#filter0_d_91_7928)">
-                <path
-                    d="M42.6817 41.1495L27.5103 6.79925C26.7269 5.02557 24.2082 5.02558 23.3927 6.79925L7.59814 41.1495C6.75833 42.9759 8.52712 44.8902 10.4125 44.1954L24.3757 39.0496C24.8829 38.8627 25.4385 38.8627 25.9422 39.0496L39.8121 44.1954C41.6849 44.8902 43.4884 42.9759 42.6817 41.1495Z"
-                    fill={color}
-                />
-                <path
-                    d="M43.7146 40.6933L28.5431 6.34306C27.3556 3.65428 23.5772 3.69516 22.3668 6.32755L6.57226 40.6778C5.3134 43.4156 7.97238 46.298 10.803 45.2549L24.7662 40.109C25.0221 40.0147 25.2999 40.0156 25.5494 40.1082L39.4193 45.254C42.2261 46.2953 44.9254 43.4347 43.7146 40.6933Z"
-                    stroke="white"
-                    strokeWidth={2.25825}
-                />
-            </g>
             <defs>
-                <filter
-                    id="filter0_d_91_7928"
-                    x={0.602397}
-                    y={0.952444}
-                    width={49.0584}
-                    height={52.428}
-                    filterUnits="userSpaceOnUse"
-                    colorInterpolationFilters="sRGB"
-                >
-                    <feFlood floodOpacity={0} result="BackgroundImageFix" />
-                    <feColorMatrix
-                        in="SourceAlpha"
-                        type="matrix"
-                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                        result="hardAlpha"
-                    />
-                    <feOffset dy={2.25825} />
-                    <feGaussianBlur stdDeviation={2.25825} />
-                    <feComposite in2="hardAlpha" operator="out" />
-                    <feColorMatrix
-                        type="matrix"
-                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0"
-                    />
-                    <feBlend
-                        mode="normal"
-                        in2="BackgroundImageFix"
-                        result="effect1_dropShadow_91_7928"
-                    />
-                    <feBlend
-                        mode="normal"
-                        in="SourceGraphic"
-                        in2="effect1_dropShadow_91_7928"
-                        result="shape"
-                    />
+                {/* Main orange gradient for ceramic spoon */}
+                <linearGradient id="chinese-spoon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="30%" stopColor={color} />
+                    <stop offset="60%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                </linearGradient>
+
+                {/* Glossy highlight gradient */}
+                <radialGradient id="glossy-highlight" cx="35%" cy="25%">
+                    <stop offset="0%" stopColor="white" stopOpacity="0.95" />
+                    <stop offset="40%" stopColor="white" stopOpacity="0.6" />
+                    <stop offset="70%" stopColor={color} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0" />
+                </radialGradient>
+
+                {/* Ceramic texture gradient */}
+                <linearGradient id="ceramic-texture" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#fff" stopOpacity="0.4" />
+                    <stop offset="50%" stopColor="#fff" stopOpacity="0.1" />
+                    <stop offset="100%" stopColor="#000" stopOpacity="0.15" />
+                </linearGradient>
+
+                {/* Handle gradient */}
+                <linearGradient id="handle-orange" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="50%" stopColor={color} />
+                    <stop offset="100%" stopColor="#c2410c" />
+                </linearGradient>
+
+                {/* Inner bowl shadow */}
+                <radialGradient id="bowl-shadow" cx="50%" cy="50%">
+                    <stop offset="0%" stopColor="#000" stopOpacity="0" />
+                    <stop offset="70%" stopColor="#000" stopOpacity="0.1" />
+                    <stop offset="100%" stopColor="#000" stopOpacity="0.25" />
+                </radialGradient>
+
+                {/* Drop shadow filter */}
+                <filter id="chinese-spoon-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" />
+                    <feOffset dx="1" dy="3" result="offsetblur" />
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.4" />
+                    </feComponentTransfer>
+                    <feMerge>
+                        <feMergeNode />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+
+                {/* Glow effect */}
+                <filter id="orange-glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
                 </filter>
             </defs>
+
+            <g filter="url(#chinese-spoon-shadow)">
+                {/* Chinese Soup Spoon Bowl - Wide, flat, rounded shape */}
+                <path
+                    d="M 15 12 Q 15 8, 18 6 L 42 6 Q 45 8, 45 12 L 45 22 Q 45 28, 39 28 L 21 28 Q 15 28, 15 22 Z"
+                    fill="url(#chinese-spoon-gradient)"
+                    stroke="#c2410c"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                />
+
+                {/* Inner bowl depth shadow */}
+                <ellipse
+                    cx="30"
+                    cy="17"
+                    rx="12"
+                    ry="9"
+                    fill="url(#bowl-shadow)"
+                />
+
+                {/* Ceramic texture overlay */}
+                <path
+                    d="M 17 12 Q 17 9, 19 7 L 41 7 Q 43 9, 43 12 L 43 22 Q 43 26, 39 26 L 21 26 Q 17 26, 17 22 Z"
+                    fill="url(#ceramic-texture)"
+                    opacity="0.6"
+                />
+
+                {/* Main glossy highlight on bowl */}
+                <ellipse
+                    cx="25"
+                    cy="13"
+                    rx="10"
+                    ry="7"
+                    fill="url(#glossy-highlight)"
+                    transform="rotate(-15 25 13)"
+                />
+
+                {/* Secondary shine spot */}
+                <ellipse
+                    cx="38"
+                    cy="18"
+                    rx="5"
+                    ry="4"
+                    fill="white"
+                    opacity="0.5"
+                    transform="rotate(20 38 18)"
+                />
+
+                {/* Small highlight for extra shine */}
+                <ellipse
+                    cx="22"
+                    cy="10"
+                    rx="3"
+                    ry="2.5"
+                    fill="white"
+                    opacity="0.8"
+                />
+
+                {/* Spoon Handle - Tapered, elegant */}
+                <path
+                    d="M 27 27 Q 27 29, 27.5 31 L 28 56 Q 28 61, 30 61 Q 32 61, 32 56 L 32.5 31 Q 33 29, 33 27 Z"
+                    fill="url(#handle-orange)"
+                    stroke="#c2410c"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                />
+
+                {/* Handle highlight */}
+                <path
+                    d="M 29 31 L 29 56 Q 29 59, 30 59 Q 31 59, 31 56 L 31 31"
+                    fill="white"
+                    opacity="0.35"
+                />
+
+                {/* Handle edge shadow for depth */}
+                <path
+                    d="M 32 31 L 32 56 Q 32 60, 30 60"
+                    stroke="#9a3412"
+                    strokeWidth="0.8"
+                    fill="none"
+                    opacity="0.6"
+                />
+
+                {/* Connection detail between bowl and handle */}
+                <ellipse
+                    cx="30"
+                    cy="28"
+                    rx="4"
+                    ry="2.5"
+                    fill="url(#handle-orange)"
+                    stroke="#c2410c"
+                    strokeWidth="1"
+                />
+
+                {/* Bowl rim highlight */}
+                <path
+                    d="M 18 6 Q 18 8, 18 10 L 18 22 Q 18 26, 21 26 L 39 26 Q 42 26, 42 22 L 42 10 Q 42 8, 42 6"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="1.2"
+                    opacity="0.5"
+                    strokeLinecap="round"
+                />
+
+                {/* Bottom rim shadow */}
+                <path
+                    d="M 21 27 Q 15 27, 15 22 L 15 20 Q 15 24, 21 24 L 39 24 Q 45 24, 45 20 L 45 22 Q 45 27, 39 27 Z"
+                    fill="#000"
+                    opacity="0.15"
+                />
+
+                {/* Outer glow for orange effect */}
+                <path
+                    d="M 15 12 Q 15 8, 18 6 L 42 6 Q 45 8, 45 12 L 45 22 Q 45 28, 39 28 L 21 28 Q 15 28, 15 22 Z"
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="0.8"
+                    opacity="0.4"
+                    filter="url(#orange-glow)"
+                />
+
+                {/* Decorative pattern lines (optional Asian detail) */}
+                <path
+                    d="M 20 15 Q 30 14, 40 15"
+                    stroke="#fff"
+                    strokeWidth="0.5"
+                    opacity="0.3"
+                    fill="none"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M 20 20 Q 30 19, 40 20"
+                    stroke="#fff"
+                    strokeWidth="0.5"
+                    opacity="0.3"
+                    fill="none"
+                    strokeLinecap="round"
+                />
+            </g>
         </svg>
     );
 };
@@ -280,6 +431,55 @@ export function SmoothCursor({
             }
         };
 
+        // Mobile touch support
+        const handleTouchStart = function (e: TouchEvent) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                cursorX.set(touch.clientX);
+                cursorY.set(touch.clientY);
+                setIsVisible(true);
+                if (scaleOnClick) {
+                    setIsClicking(true);
+                    scale.set(0.8);
+                }
+            }
+        };
+
+        const handleTouchMove = function (e: TouchEvent) {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                const currentPos = { x: touch.clientX, y: touch.clientY };
+
+                updateVelocity(currentPos);
+                cursorX.set(currentPos.x);
+                cursorY.set(currentPos.y);
+
+                const speed = Math.sqrt(
+                    Math.pow(velocity.current.x, 2) + Math.pow(velocity.current.y, 2),
+                );
+
+                if (speed > 0.1 && rotateOnMove) {
+                    const currentAngle =
+                        Math.atan2(velocity.current.y, velocity.current.x) * (180 / Math.PI) +
+                        90;
+
+                    let angleDiff = currentAngle - previousAngle.current;
+                    if (angleDiff > 180) angleDiff -= 360;
+                    if (angleDiff < -180) angleDiff += 360;
+                    accumulatedRotation.current += angleDiff;
+                    rotation.set(accumulatedRotation.current);
+                    previousAngle.current = currentAngle;
+                }
+            }
+        };
+
+        const handleTouchEnd = function () {
+            if (scaleOnClick) {
+                setIsClicking(false);
+                scale.set(1);
+            }
+        };
+
         let rafId: number;
         const throttledMouseMove = function (e: MouseEvent) {
             if (rafId) return;
@@ -290,12 +490,23 @@ export function SmoothCursor({
             });
         };
 
-        document.body.style.cursor = "none";
+        // Check if device supports touch
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        if (!isTouchDevice) {
+            document.body.style.cursor = "none";
+        }
+
         window.addEventListener("mousemove", throttledMouseMove);
         document.addEventListener("mouseenter", handleMouseEnter);
         document.addEventListener("mouseleave", handleMouseLeave);
         document.addEventListener("mousedown", handleMouseDown);
         document.addEventListener("mouseup", handleMouseUp);
+
+        // Add touch event listeners for mobile
+        document.addEventListener("touchstart", handleTouchStart, { passive: true });
+        document.addEventListener("touchmove", handleTouchMove, { passive: true });
+        document.addEventListener("touchend", handleTouchEnd);
 
         return function () {
             window.removeEventListener("mousemove", throttledMouseMove);
@@ -303,6 +514,9 @@ export function SmoothCursor({
             document.removeEventListener("mouseleave", handleMouseLeave);
             document.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mouseup", handleMouseUp);
+            document.removeEventListener("touchstart", handleTouchStart);
+            document.removeEventListener("touchmove", handleTouchMove);
+            document.removeEventListener("touchend", handleTouchEnd);
             document.body.style.cursor = "auto";
             if (rafId) cancelAnimationFrame(rafId);
         };

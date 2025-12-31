@@ -21,7 +21,7 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Customer Receipt - Table ${bill.table.table_number}</title>
+          <title>Customer Receipt - Table ${tableNumber}</title>
           <style>
             body { font-family: 'Satoshi', Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
             .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
@@ -64,7 +64,7 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Kitchen Ticket - Table ${bill.table.table_number}</title>
+          <title>Kitchen Ticket - Table ${tableNumber}</title>
           <style>
             body { font-family: 'Satoshi', Arial, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
             .header { background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
@@ -99,6 +99,21 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
     });
   };
 
+  // Handle different bill data structures
+  const tableNumber = bill?.table?.table_number || bill?.tableNumber || 'N/A';
+  const billId = bill?.id || bill?._id || 'N/A';
+  const createdAt = bill?.created_at || bill?.createdAt || bill?.servedAt || new Date().toISOString();
+  const orderId = bill?.order_id || bill?.orderId || billId;
+
+  // Handle items array - could be in different formats
+  const items = bill?.items || bill?.billDetails?.items || [];
+
+  // Handle totals - with fallbacks for different structures
+  const subtotal = bill?.subtotal || bill?.billDetails?.subtotal || 0;
+  const tax = bill?.tax || bill?.billDetails?.tax || 0;
+  const totalAmount = bill?.total_amount || bill?.totalAmount || bill?.totalBillAmount || bill?.billDetails?.total_amount || 0;
+
+
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-4">
       {/* Customer Receipt */}
@@ -109,7 +124,7 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
             <div className="h-px bg-gradient-to-r from-transparent via-primary to-transparent"></div>
             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Customer Receipt</p>
             <p className="text-xs text-muted-foreground font-mono">
-              {formatDate(bill.created_at)}
+              {formatDate(createdAt)}
             </p>
           </div>
         </CardHeader>
@@ -118,11 +133,11 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
           <div className="flex justify-between items-center p-5 bg-gradient-to-r from-muted/30 to-muted/50 rounded-lg border">
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Table Number</p>
-              <p className="text-3xl font-bold">#{bill.table.table_number}</p>
+              <p className="text-3xl font-bold">#{tableNumber}</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Bill Number</p>
-              <p className="text-lg font-mono font-bold">{bill.id.slice(0, 8).toUpperCase()}</p>
+              <p className="text-lg font-mono font-bold">{billId.toString().slice(0, 8).toUpperCase()}</p>
             </div>
           </div>
 
@@ -130,15 +145,15 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
           <div className="space-y-4">
             <h3 className="font-bold text-lg uppercase tracking-wide border-b pb-2">Order Items</h3>
             <div className="space-y-3">
-              {bill.items.map((item: any, index: number) => (
+              {items.map((item: any, index: number) => (
                 <div key={index} className="flex justify-between items-center py-3 border-b border-dashed">
                   <div className="flex-1">
                     <p className="font-semibold text-base">{item.name || item.item_name || 'Unknown Item'}</p>
                     <p className="text-xs text-muted-foreground font-mono mt-1">
-                      ₹{item.price.toFixed(2)} × {item.quantity}
+                      ₹{(item.price || 0).toFixed(2)} × {item.quantity || 0}
                     </p>
                   </div>
-                  <p className="font-bold text-lg">₹{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="font-bold text-lg">₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
                 </div>
               ))}
             </div>
@@ -150,16 +165,16 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
           <div className="space-y-3 bg-muted/30 p-4 rounded-lg">
             <div className="flex justify-between text-sm">
               <span className="font-medium">Subtotal:</span>
-              <span className="font-semibold">₹{parseFloat(bill.subtotal).toFixed(2)}</span>
+              <span className="font-semibold">₹{parseFloat(subtotal.toString()).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="font-medium">Tax (5%):</span>
-              <span className="font-semibold">₹{parseFloat(bill.tax).toFixed(2)}</span>
+              <span className="font-semibold">₹{parseFloat(tax.toString()).toFixed(2)}</span>
             </div>
             <Separator />
             <div className="flex justify-between text-xl font-bold pt-2">
               <span>Total Amount:</span>
-              <span className="text-primary text-2xl">₹{parseFloat(bill.total_amount).toFixed(2)}</span>
+              <span className="text-primary text-2xl">₹{parseFloat(totalAmount.toString()).toFixed(2)}</span>
             </div>
           </div>
 
@@ -181,17 +196,17 @@ const BillDisplay = ({ bill, onClose }: BillDisplayProps) => {
         </CardHeader>
         <CardContent className="space-y-5 pt-6">
           <div className="text-center space-y-2 bg-muted/50 p-4 rounded-lg border">
-            <p className="text-5xl font-bold">TABLE {bill.table.table_number}</p>
-            <p className="text-sm font-mono text-muted-foreground">{formatDate(bill.created_at)}</p>
-            <p className="text-xs font-mono text-muted-foreground">Order ID: {bill.order_id?.slice(0, 8).toUpperCase()}</p>
+            <p className="text-5xl font-bold">TABLE {tableNumber}</p>
+            <p className="text-sm font-mono text-muted-foreground">{formatDate(createdAt)}</p>
+            <p className="text-xs font-mono text-muted-foreground">Order ID: {orderId?.toString().slice(0, 8).toUpperCase()}</p>
           </div>
           <Separator />
           <div className="space-y-3">
             <h3 className="font-bold text-sm uppercase tracking-wide text-muted-foreground">Items Required:</h3>
-            {bill.items.map((item: any, index: number) => (
+            {items.map((item: any, index: number) => (
               <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-muted/50 to-muted/30 rounded-lg border border-primary/10">
                 <span className="font-bold text-lg">{item.name || item.item_name || 'Unknown Item'}</span>
-                <span className="text-3xl font-bold text-primary bg-primary/10 px-4 py-2 rounded">× {item.quantity}</span>
+                <span className="text-3xl font-bold text-primary bg-primary/10 px-4 py-2 rounded">× {item.quantity || 0}</span>
               </div>
             ))}
           </div>
